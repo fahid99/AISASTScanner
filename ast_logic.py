@@ -7,7 +7,7 @@ class InsecurityDetector(ast.NodeVisitor):
 
     def visit_Call(self, node):
         func_name = self.get_full_construct_name(node.func)
-        module_name = self.get_full_construct_name(node.func)
+        module_name = func_name.split(".")[0] if "." in func_name else ""
         if func_name in INSECURE_FUNCTIONS:
             self.issues.append({
                 "type": "Insecure Function Use",
@@ -44,3 +44,4 @@ def ast_scan(code: str):
     detector = InsecurityDetector()
     detector.visit(tree)
     return detector.issues
+
