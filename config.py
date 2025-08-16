@@ -26,3 +26,5 @@ client = OpenAI(api_key=api_key)
 
 # Add your Python files you want the scanner to analyze
 filename = 'sample.py'
+with open(filename, "r") as file:
+        code = file.read()

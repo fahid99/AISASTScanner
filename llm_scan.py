@@ -3,15 +3,11 @@ from config import client, filename
 from ast_logic import ast_scan
 import json
 
-import json
-from config import client, filename
-from ast_logic import ast_scan
-
 def llm_scan():
     with open(filename, "r") as file:
-        code_snippet = file.read()
+        code = file.read()
 
-    issues = ast_scan(code_snippet)
+    issues = ast_scan(code)
     issues_str = json.dumps(issues, indent=2)
 
     prompt = f"""You are a static application security testing (SAST) tool.
@@ -24,7 +20,7 @@ def llm_scan():
 
 				Here is the code:
 
-				{code_snippet}
+				{code}
 
 				Here are AST-detected function calls that may be insecure. Double check to reduce false positives:
 
@@ -32,7 +28,7 @@ def llm_scan():
 				"""
 
     response = client.responses.create(
-        model="gpt-4o-mini",
+        model="gpt-5",
         input=prompt
     )
 

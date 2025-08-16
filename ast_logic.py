@@ -8,21 +8,18 @@ class InsecurityDetector(ast.NodeVisitor):
     def visit_Call(self, node):
         func_name = self.get_full_construct_name(node.func)
         module_name = self.get_full_construct_name(node.func)
+        print(ast.dump(node, indent=4))
         if func_name in INSECURE_FUNCTIONS:
             self.issues.append({
-                "type": "Insecure Function Use",
                 "function": func_name,
                 "lineno": node.lineno,
                 "col_offset": node.col_offset,
-                "recommendation": f"Do not use {func_name} or replace it with a safer alternative."
             })
         if module_name in INSECURE_MODULES:
             self.issues.append({
-                "type": "Insecure Module Use",
                 "function": module_name,
                 "lineno": node.lineno,
                 "col_offset": node.col_offset,
-                "recommendation": f"Do not use {module_name} or replace it with a safer alternative."
             })
         self.generic_visit(node)
 
@@ -44,3 +41,6 @@ def ast_scan(code: str):
     detector = InsecurityDetector()
     detector.visit(tree)
     return detector.issues
+
+print_ast = ast_scan(code)
+print(print_ast)

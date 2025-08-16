@@ -1,50 +1,32 @@
-```json
-{
-  "vulnerabilities": [
-    {
-      "type": "Insecure Randomness",
-      "line_number": 5,
-      "description": "Password reset token generation uses a weak random number generator, making it predictable.",
-      "recommendation": "Use a cryptographically secure random number generator, such as os.urandom()."
-    },
-    {
-      "type": "Hardcoded Secrets",
-      "line_number": 9,
-      "description": "API key is hardcoded into the source code, which could be compromised.",
-      "recommendation": "Store sensitive information like API keys in environment variables or secure vaults."
-    },
-    {
-      "type": "Hardcoded Credentials",
-      "line_number": 13,
-      "description": "Database credentials are hardcoded in the source code, exposing them to unauthorized access.",
-      "recommendation": "Use environment variables or a secure vault to manage database credentials."
-    },
-    {
-      "type": "Insecure File Creation",
-      "line_number": 19,
-      "description": "Temporary file is created with default permissions, which may not be secure.",
-      "recommendation": "Use a secure method of creating temporary files, such as using tempfile.NamedTemporaryFile()."
-    },
-    {
-      "type": "Weak File Permissions",
-      "line_number": 27,
-      "description": "Configuration file is created with globally writable permissions (777).",
-      "recommendation": "Set stricter permissions, such as 600, to limit access to the owner only."
-    },
-    {
-      "type": "Insecure Function Use",
-      "function": "open",
-      "line_number": 23,
-      "description": "Using open() for file operations without securing the content.",
-      "recommendation": "Do not use open or replace it with a safer alternative."
-    },
-    {
-      "type": "Insecure Function Use",
-      "function": "open",
-      "line_number": 29,
-      "description": "Using open() for file operations without securing the content.",
-      "recommendation": "Do not use open or replace it with a safer alternative."
-    }
-  ]
-}
-```
+[
+  {
+    "type": "Predictable token generation (insecure randomness)",
+    "line": 7,
+    "description": "Password reset token is derived from email plus a 6-digit number from random.randint (non-cryptographic), then hashed. This is guessable/brute-forceable and not suitable for security tokens.",
+    "remediation": "Use a cryptographically secure random generator and sufficiently long, unguessable tokens.\\nExample:\\n\\nimport secrets\\n\\ndef generate_reset_token(email):\\n    return secrets.token_urlsafe(32)"
+  },
+  {
+    "type": "Hardcoded API key (secret in source code)",
+    "line": 12,
+    "description": "API key is embedded in source code, risking exposure via version control, logs, or client-side distribution.",
+    "remediation": "Remove hardcoded secrets. Load from environment variables or a secrets manager.\\nExample:\\n\\nimport os\\nAPI_KEY = os.environ.get('API_KEY')  # Or fetch from your secrets manager"
+  },
+  {
+    "type": "Hardcoded database credentials",
+    "line": 17,
+    "description": "Database credentials are hardcoded, and the function returns a string containing them, increasing the risk of leakage via logs or errors.",
+    "remediation": "Load credentials from secure storage and avoid exposing them in return values or logs.\\nExample:\\n\\nimport os\\n\\ndef connect_to_db():\\n    username = os.environ['DB_USERNAME']\\n    password = os.environ['DB_PASSWORD']\\n    # Use your DB client to connect without printing/returning credentials\\n    return 'Connected to DB'"
+  },
+  {
+    "type": "Insecure temporary file creation (race/symlink vulnerability)",
+    "line": 23,
+    "description": "Creates a predictable path in /tmp and opens it directly. This is vulnerable to race conditions and symlink attacks.",
+    "remediation": "Use the tempfile module to create securely named temp files with restricted permissions.\\nExample:\\n\\nimport tempfile, os\\n\\ndef write_temp_data(data):\\n    with tempfile.NamedTemporaryFile(mode='w', delete=False) as f:\\n        f.write(data)\\n        temp_path = f.name\\n    os.chmod(temp_path, 0o600)\\n    return temp_path"
+  },
+  {
+    "type": "Insecure file permissions (world-writable config)",
+    "line": 31,
+    "description": "Sets config.cfg permissions to 0o777, allowing any user to read/modify/execute, which can lead to tampering and data exposure.",
+    "remediation": "Create/write the file with restrictive permissions (e.g., 0o600).\\nExample:\\n\\nimport os\\n\\ndef save_config(config):\\n    fd = os.open('config.cfg', os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)\\n    with os.fdopen(fd, 'w') as f:\\n        f.write(config)"
+  }
+]
